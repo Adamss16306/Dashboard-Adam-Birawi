@@ -1,8 +1,10 @@
-
 import Dashboard from "./components/Dashboard";
-import "./App.css"
+import AdminDashboard from "./components/AdminDashboard";
+import "./App.css";
 
 function App() {
+    const path = window.location.pathname;
+
     return (
         <div
             style={{
@@ -13,7 +15,7 @@ function App() {
                 background: "linear-gradient(135deg, #0f3d0f, #000000 )"
             }}
         >
-            <Dashboard />
+            {path === "/admin" ? <AdminDashboard /> : <Dashboard />}
         </div>
     );
 }
