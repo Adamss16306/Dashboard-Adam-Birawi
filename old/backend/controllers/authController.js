@@ -1,21 +1,21 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const User = require("../models/User");
+const users = require("../data/users");
 
 async function register(req, res) {
 
     try {
 
-        const { name, email, password } = req.body;
+        const { username, password } = req.body;
 
-        if (!name || !email || !password) {
+        if (!username || !password) {
             return res.status(400).json({
-                message: "Name, email and password are required"
+                message: "Username and password are required"
             });
         }
 
-        const existingUser = await User.findOne({ email });
+        const existingUser = users.find(u => u.username === username);
 
         if (existingUser) {
             return res.status(400).json({
@@ -25,21 +25,16 @@ async function register(req, res) {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            role: "user"
-        });
+        const newUser = {
+            id: Date.now(),
+            username,
+            password: hashedPassword
+        };
+
+        users.push(newUser);
 
         res.status(201).json({
-            message: "User registered successfully",
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role
-            }
+            message: "User registered successfully"
         });
 
     } catch (error) {
@@ -54,15 +49,9 @@ async function login(req, res) {
 
     try {
 
-        const { email, password } = req.body;
+        const { username, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({
-                message: "Email and password are required"
-            });
-        }
-
-        const user = await User.findOne({ email });
+        const user = users.find(u => u.username === username);
 
         if (!user) {
             return res.status(401).json({
@@ -80,9 +69,8 @@ async function login(req, res) {
 
         const token = jwt.sign(
             {
-                id: user._id,
-                email: user.email,
-                role: user.role
+                id: user.id,
+                username: user.username
             },
             process.env.JWT_SECRET,
             {
@@ -91,13 +79,7 @@ async function login(req, res) {
         );
 
         res.json({
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            }
+            token
         });
 
     } catch (error) {

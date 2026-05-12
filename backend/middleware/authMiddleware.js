@@ -1,30 +1,32 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-function authMiddleware(req, res, next) {
-
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-        return res.status(401).json({
-            message: "Access denied"
-        });
-    }
-
+async function authMiddleware(req, res, next) {
     try {
+        let token = req.headers.authorization;
 
-        const token = authHeader.split(" ")[1];
+        if (!token) {
+            return res.status(401).json({ message: "No token" });
+        }
 
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        if (token.startsWith("Bearer ")) {
+            token = token.split(" ")[1];
+        }
 
-        req.user = verified;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findById(decoded.id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        req.user = user;
 
         next();
 
     } catch (error) {
-
-        res.status(401).json({
-            message: "Invalid token"
-        });
+        return res.status(401).json({ message: "Invalid token" });
     }
 }
 
