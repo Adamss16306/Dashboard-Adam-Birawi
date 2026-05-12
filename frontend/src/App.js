@@ -1,5 +1,5 @@
 import Dashboard from "./components/Dashboard";
-import AdminDashboard from "./components/AdminDashboard";
+import AdminDashboard from "./components/admin/AdminDashboard";
 import "./App.css";
 
 function App() {
